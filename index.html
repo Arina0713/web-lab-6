@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лабораторная работа №6</title>
+</head>
+<body>
+    <div class="calc-card">
+        <h1>Калькулятор услуг</h1>
+        <!-- 1. Количество -->
+         <div class="form-group">
+            <label for="quantity">Количество:</label>
+            <input type="number" id="quantity" value="1" min="1">
+        </div>
+        <!-- 2. Выбор типа услуги -->
+         <div class="form-group">
+            <label for="service-type">Тип услуги:</label>
+            <select id="service-type">
+                <option value="basic">Базовая (без допов)</option>
+                <option value="standard">Стандарт (с выбором опции)</option>
+                <option value="premium">Премиум (опция + доп. услуга)</option>
+            </select>
+        </div>
+        <!-- 3. ДИНАМИЧЕСКАЯ ЗОНА -->
+         <div id="dynamic-area"></div>
+         <hr>
+         <div class="result">
+            Итого: <span id="total-price">0</span> $
+        </div>
+    </div>
+    <script src="js-service.js"></script>
+</body>
+</html>
