@@ -1,79 +1,133 @@
+/*Логика калькулятора услуг*/
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Данные (Цены)
-    const prices = {
-        basic: 100,
-        standard: { base: 200, options: { "Fast: +50$": 50, "Eco: +20$": 20 } },
-        premium: { base: 500, options: { "VIP: +150$": 150, "Express: +100$": 100 }, extra: 75 }
-    };
-    // 2. Элементы DOM
-    const serviceTypeSelect = document.getElementById('service-type');
-    const quantityInput = document.getElementById('quantity');
-    const dynamicArea = document.getElementById('dynamic-area');
-    const totalPriceDisplay = document.getElementById('total-price');
-    // 3. Функция перерисовки динамической зоны
-    const renderDynamicContent = () => {
-    const type = serviceTypeSelect.value;
-    dynamicArea.innerHTML = ''; // Очищаем старое
-    if (type === 'standard') {
-        // Тип 2: Только Select
-        const container = document.createElement('div');
-        container.className = 'dynamic-item';
-        container.innerHTML = `
-        <label for="option-select">Выберите опцию:</label>
-        <select id="option-select">
-        <option value="0">Нет опции</option>
-        <option value="50">Fast (+50$)</option>
-        <option value="20">Eco (+20$)</option>
-        </select>`;
-        dynamicArea.appendChild(container);
-        // Добавляем слушатель на новый элемент
-        document.getElementById('option-select').addEventListener('change', calculate);
-    } else if (type === 'premium') {
-        // Тип 3: Select + Checkbox
-        const container = document.createElement('div');
-        container.className = 'dynamic-item';
-        container.innerHTML = `
-        <label for="option-select">Выберите опцию:</label>
-        <select id="option-select">
-        <option value="0">Нет опции</option>
-        <option value="150">VIP (+150$)</option>
-        <option value="100">Express (+100$)</option>
-        </select>
-        <div class="checkbox-group" style="margin-top:10px">
-        <input type="checkbox" id="extra-check">
-        <label for="extra-check">Доп. страховка (+75$)</label>
-        </div>
-        `;
-        dynamicArea.appendChild(container);
-        // Вешаем слушатели на новые элементы
-        document.getElementById('option-select').addEventListener('change', calculate);
-        document.getElementById('extra-check').addEventListener('change', calculate);
-    }
-    calculate(); // Пересчитываем при смене типа
-    };
-    // 4. Функция расчета
-    const calculate = () => {
-        const type = serviceTypeSelect.value;
-        const quantity = parseInt(quantityInput.value) || 0;
-        let unitPrice = 0;
-        if (type === 'basic') {
-            unitPrice = prices.basic;
-        }
-        else if (type === 'standard') {
-            const optionPrice = parseFloat(document.getElementById('option-select').value) || 0;
-            unitPrice = prices.standard.base + optionPrice;
-        }
-        else if (type === 'premium') {
-            const optionPrice = parseFloat(document.getElementById('option-select').value) || 0;
-            const extraCheck = document.getElementById('extra-check').checked; const extraPrice =
-            extraCheck ? prices.premium.extra : 0; unitPrice = prices.premium.base + optionPrice +
-            extraPrice; }
-            const total = unitPrice * quantity;
-            totalPriceDisplay.textContent = total.toLocaleString();
+    // 1. Данные (имитация базы данных)
+    const services = [
+        { id: 's1', name: 'Базовая услуга', basePrice: 100, optionsType: 'none', options: [] },
+        { id: 's2', name: 'Премиум услуга', basePrice: 200, optionsType: 'select', options: [
+            { name: 'Ускоренная доставка', price: 50 },
+            { name: 'VIP поддержка', price: 100 }
+        ]},
+        { id: 's3', name: 'Комплексная услуга', basePrice: 500, optionsType: 'checkbox',
+            options: [
+                { name: 'Страховка', price: 50 },
+                { name: 'Упаковка', price: 30 },
+                { name: 'Подарочная карта', price: 20 }
+            ]}
+        ];
+        // 2. Инициализация элементов DOM
+        const quantityInput = document.getElementById('quantity');
+        const radioContainer = document.getElementById('radio-container');
+        const optionsContainer = document.getElementById('dynamic-options-container');
+        const totalPriceDisplay = document.getElementById('total-price');
+        const errorMsg = document.getElementById('error-msg');
+        // 3. Вспомогательные функции
+        const clearError = () => { errorMsg.textContent = ''; };
+        const setError = (text) => { errorMsg.textContent = text; };
+        // 4. Отрисовка радиокнопок (типов услуг)
+        const renderRadioButtons = () => {
+            services.forEach(service => {
+                const wrapper = document.createElement('label');
+                wrapper.className = 'radio-group';
+                const radio = document.createElement('input');
+                radio.type = 'radio';
+                radio.name = 'service-type';
+                radio.value = service.id;
+                // При клике на радио — обновляем динамический интерфейс и пересчитываем
+                итог
+                radio.addEventListener('change', () => {
+                    updateDynamicUI(service.id);
+                    calculateTotal();
+                });
+                wrapper.appendChild(radio);
+                wrapper.appendChild(document.createTextNode(service.name));
+                radioContainer.appendChild(wrapper);
+            });
         };
-        // 5. Инициализация слушателей на основные элементы
-        serviceTypeSelect.addEventListener('change', renderDynamicContent);
-        quantityInput.addEventListener('input', calculate);
-        // Первый запуск
-        renderDynamicContent();
-    });
+        // 5. Динамическое изменение формы (Select или Checkbox)
+        const updateDynamicUI = (selectedId) => {
+            const service = services.find(s => s.id === selectedId);
+            optionsContainer.innerHTML = ''; // Полная очистка контейнера
+            if (service.optionsType === 'none') {
+                optionsContainer.innerHTML = '<small style="color: #888;"> Дополнительных опций нет</small>';
+            }
+            else if (service.optionsType === 'select') {
+                const select = document.createElement('select');
+                select.id = 'dynamic-select';
+                // Добавляем вариант "Без дополнений"
+                const defaultOpt = document.createElement('option');
+                defaultOpt.value = "0";
+                defaultOpt.textContent = "-- Без дополнений --";
+                select.appendChild(defaultOpt);
+                // Заполняем селект опциями из массива
+                service.options.forEach(opt => {
+                    const o = document.createElement('option');
+                    o.value = opt.price;
+                    o.textContent = `${opt.name} (+${opt.price}$)`;
+                    select.appendChild(o);
+                });
+                select.addEventListener('change', calculateTotal);
+                optionsContainer.appendChild(select);
+            }
+            else if (service.optionsType === 'checkbox') {
+                service.options.forEach(opt => {
+                    const div = document.createElement('div');
+                    div.className = 'option-item';
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.className = 'dynamic-checkbox';
+                    cb.value = opt.price;
+                    cb.addEventListener('change', calculateTotal);
+                    const lbl = document.createElement('label');
+                    lbl.textContent = `${opt.name} (+${opt.price}$)`;
+                    lbl.style.margin = "0";
+                    lbl.style.fontWeight = "normal";
+                    div.appendChild(cb);
+                    div.appendChild(lbl);
+                    optionsContainer.appendChild(div);
+                });
+            }
+        };
+        // 6. Основная функция расчета
+        const calculateTotal = () => {
+            clearError();
+            const quantityStr = quantityInput.value.trim();
+            const selectedRadio = document.querySelector('input[name="service-type"]:checked');
+            // Если тип услуги не выбран, ничего не считаем
+            if (!selectedRadio) return;
+            // Валидация поля количества
+            if (quantityStr === "") {
+                setError("Введите количество!");
+                totalPriceDisplay.textContent = "0";
+                return;
+            }
+            // Регулярное выражение: только целые положительные числа
+            const digitRegex = /^[1-9]\d*$/;
+            if (!digitRegex.test(quantityStr)) {
+            setError("Ошибка: введите целое число больше 0!");
+            totalPriceDisplay.textContent = "0";
+            return;
+        }
+        const quantity = parseInt(quantityStr, 10);
+        const service = services.find(s => s.id === selectedRadio.value);
+        let extraCost = 0;
+        // Логика подсчета доп. стоимости
+        if (service.optionsType === 'select') {
+            const select = document.getElementById('dynamic-select');
+            extraCost = select ? parseInt(select.value, 10) : 0;
+        }
+        else if (service.optionsType === 'checkbox') {
+            const checkedBoxes =
+            optionsContainer.querySelectorAll('.dynamic-checkbox:checked');
+            checkedBoxes.forEach(cb => {
+                extraCost += parseInt(cb.value, 10);
+            });
+        }
+        // Итоговая формула: (База + Допы) * Количество
+        const total = (service.basePrice + extraCost) * quantity;
+        totalPriceDisplay.textContent = total;
+    };
+    // Слушатель на ввод количества (чтобы расчет был мгновенным при печати)
+    quantityInput.addEventListener('input', calculateTotal);
+    // Запуск инициализации
+    renderRadioButtons();
+});

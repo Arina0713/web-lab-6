@@ -6,29 +6,28 @@
     <title>Лабораторная работа №6</title>
 </head>
 <body>
-    <div class="calc-card">
+    <div class="calc-container">
         <h1>Калькулятор услуг</h1>
-        <!-- 1. Количество -->
+        <!-- Поле для ввода количества -->
          <div class="form-group">
             <label for="quantity">Количество:</label>
-            <input type="number" id="quantity" value="1" min="1">
+            <input type="text" id="quantity" placeholder="Введите число">
+            <div id="error-msg" class="error"></div>
         </div>
-        <!-- 2. Выбор типа услуги -->
+        <!-- Выбор типа услуги (Радиокнопки) -->
          <div class="form-group">
-            <label for="service-type">Тип услуги:</label>
-            <select id="service-type">
-                <option value="basic">Базовая (без допов)</option>
-                <option value="standard">Стандарт (с выбором опции)</option>
-                <option value="premium">Премиум (опция + доп. услуга)</option>
-            </select>
+            <label>Выберите тип услуги:</label>
+            <div id="radio-container" class="radio-group">
+                <!-- Радиокнопки добавятся через JS -->
+                </div>
+            </div>
+            <!-- Динамический контейнер для селекта или чекбоксов -->
+             <div id="dynamic-options-container"></div>
+             <div class="result-area">
+                Итого: <span id="total-price">0</span> $
+            </div>
         </div>
-        <!-- 3. ДИНАМИЧЕСКАЯ ЗОНА -->
-         <div id="dynamic-area"></div>
-         <hr>
-         <div class="result">
-            Итого: <span id="total-price">0</span> $
-        </div>
-    </div>
-    <script src="js-service.js"></script>
+        <!-- Подключение JS -->
+         <script src="js-calc.js"></script>
 </body>
 </html>
