@@ -1,6 +1,6 @@
 /*Логика калькулятора услуг*/
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Данные (имитация базы данных)
+    // 1. Данные
     const services = [
         { id: 's1', name: 'Базовая услуга', basePrice: 100, optionsType: 'none', options: [] },
         { id: 's2', name: 'Премиум услуга', basePrice: 200, optionsType: 'select', options: [
@@ -22,112 +22,85 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorMsg = document.getElementById('error-msg');
         // 3. Вспомогательные функции
         const clearError = () => { errorMsg.textContent = ''; };
-        const setError = (text) => { errorMsg.textContent = text; };
-        // 4. Отрисовка радиокнопок (типов услуг)
+        const setError = (text) => { errorMsg.textContent = text; errorMsg.style.color = 'red'; };
+        // 4. Отрисовка радиокнопок
         const renderRadioButtons = () => {
+            radioContainer.innerHTML = ''; // Очистка перед отрисовкой
             services.forEach(service => {
-                const wrapper = document.createElement('label');
-                wrapper.className = 'radio-group';
-                const radio = document.createElement('input');
-                radio.type = 'radio';
-                radio.name = 'service-type';
-                radio.value = service.id;
-                // При клике на радио — обновляем динамический интерфейс и пересчитываем
-                итог
-                radio.addEventListener('change', () => {
-                    updateDynamicUI(service.id);
-                    calculateTotal();
-                });
-                wrapper.appendChild(radio);
-                wrapper.appendChild(document.createTextNode(service.name));
-                radioContainer.appendChild(wrapper);
+            const wrapper = document.createElement('label');
+            wrapper.style.display = 'block'; // Чтобы кнопки были друг под другом
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'service-type';
+            radio.value = service.id;
+            radio.addEventListener('change', () => {
+                updateDynamicUI(service.id);
+                calculateTotal();
             });
-        };
-        // 5. Динамическое изменение формы (Select или Checkbox)
-        const updateDynamicUI = (selectedId) => {
-            const service = services.find(s => s.id === selectedId);
-            optionsContainer.innerHTML = ''; // Полная очистка контейнера
-            if (service.optionsType === 'none') {
-                optionsContainer.innerHTML = '<small style="color: #888;"> Дополнительных опций нет</small>';
-            }
-            else if (service.optionsType === 'select') {
-                const select = document.createElement('select');
-                select.id = 'dynamic-select';
-                // Добавляем вариант "Без дополнений"
-                const defaultOpt = document.createElement('option');
-                defaultOpt.value = "0";
-                defaultOpt.textContent = "-- Без дополнений --";
-                select.appendChild(defaultOpt);
-                // Заполняем селект опциями из массива
-                service.options.forEach(opt => {
-                    const o = document.createElement('option');
-                    o.value = opt.price;
-                    o.textContent = `${opt.name} (+${opt.price}$)`;
-                    select.appendChild(o);
-                });
-                select.addEventListener('change', calculateTotal);
-                optionsContainer.appendChild(select);
-            }
-            else if (service.optionsType === 'checkbox') {
-                service.options.forEach(opt => {
-                    const div = document.createElement('div');
-                    div.className = 'option-item';
-                    const cb = document.createElement('input');
-                    cb.type = 'checkbox';
-                    cb.className = 'dynamic-checkbox';
-                    cb.value = opt.price;
-                    cb.addEventListener('change', calculateTotal);
-                    const lbl = document.createElement('label');
-                    lbl.textContent = `${opt.name} (+${opt.price}$)`;
-                    lbl.style.margin = "0";
-                    lbl.style.fontWeight = "normal";
-                    div.appendChild(cb);
-                    div.appendChild(lbl);
-                    optionsContainer.appendChild(div);
-                });
-            }
-        };
-        // 6. Основная функция расчета
-        const calculateTotal = () => {
-            clearError();
-            const quantityStr = quantityInput.value.trim();
-            const selectedRadio = document.querySelector('input[name="service-type"]:checked');
-            // Если тип услуги не выбран, ничего не считаем
-            if (!selectedRadio) return;
-            // Валидация поля количества
-            if (quantityStr === "") {
-                setError("Введите количество!");
-                totalPriceDisplay.textContent = "0";
-                return;
-            }
-            // Регулярное выражение: только целые положительные числа
-            const digitRegex = /^[1-9]\d*$/;
-            if (!digitRegex.test(quantityStr)) {
-            setError("Ошибка: введите целое число больше 0!");
-            totalPriceDisplay.textContent = "0";
-            return;
-        }
-        const quantity = parseInt(quantityStr, 10);
-        const service = services.find(s => s.id === selectedRadio.value);
-        let extraCost = 0;
-        // Логика подсчета доп. стоимости
-        if (service.optionsType === 'select') {
-            const select = document.getElementById('dynamic-select');
-            extraCost = select ? parseInt(select.value, 10) : 0;
-        }
-        else if (service.optionsType === 'checkbox') {
-            const checkedBoxes =
-            optionsContainer.querySelectorAll('.dynamic-checkbox:checked');
-            checkedBoxes.forEach(cb => {
-                extraCost += parseInt(cb.value, 10);
-            });
-        }
-        // Итоговая формула: (База + Допы) * Количество
-        const total = (service.basePrice + extraCost) * quantity;
-        totalPriceDisplay.textContent = total;
+            wrapper.appendChild(radio);
+            wrapper.appendChild(document.createTextNode(service.name));
+            radioContainer.appendChild(wrapper);
+        });
     };
-    // Слушатель на ввод количества (чтобы расчет был мгновенным при печати)
-    quantityInput.addEventListener('input', calculateTotal);
-    // Запуск инициализации
-    renderRadioButtons();
+    // 5. Динамическое изменение формы
+    const updateDynamicUI = (selectedId) => {
+    const service = services.find(s => s.id === selectedId); optionsContainer.innerHTML = '';
+    if (service.optionsType === 'select') {
+        const select = document.createElement('select');
+        select.id = 'extra-option';
+        const defaultOpt = document.createElement('option');
+        defaultOpt.text = '-- Выберите опцию --';
+        defaultOpt.value = '0';
+        select.appendChild(defaultOpt);
+        service.options.forEach(opt => {
+            const option = document.createElement('option');
+            option.value = opt.price;
+            option.text = `${opt.name} (+${opt.price}$)`;
+            select.appendChild(option);
+        });
+        select.addEventListener('change', calculateTotal);
+        optionsContainer.appendChild(select);
+    } else if (service.optionsType === 'checkbox') {
+        service.options.forEach(opt => {
+            const label = document.createElement('label');
+            label.style.display = 'block';
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'extra-checkbox';
+            cb.value = opt.price;
+            cb.addEventListener('change', calculateTotal);
+
+            label.appendChild(cb);
+            label.appendChild(document.createTextNode(` ${opt.name} (+${opt.price}$)`));
+            optionsContainer.appendChild(label);
+        });
+    }
+};
+// 6. Расчет итоговой суммы
+const calculateTotal = () => {
+    clearError();
+    const qty = parseInt(quantityInput.value);
+    if (isNaN(qty) || qty <= 0) {
+        setError('Введите корректное количество');
+        totalPriceDisplay.textContent = '0';
+        return;
+    }
+    const selectedRadio = document.querySelector('input[name="service-type"]:checked');
+    if (!selectedRadio) return;
+    const service = services.find(s => s.id === selectedRadio.value);
+    let extraPrice = 0;
+    if (service.optionsType === 'select') {
+        const select = document.getElementById('extra-option');
+        extraPrice = parseFloat(select.value);
+    } else if (service.optionsType === 'checkbox') {
+        const checkboxes = document.querySelectorAll('.extra-checkbox:checked');
+        checkboxes.forEach(cb => extraPrice += parseFloat(cb.value));
+    }
+    const total = (service.basePrice + extraPrice) * qty;
+    totalPriceDisplay.textContent = total.toFixed(2)
+};
+// Слушатель ввода количества
+quantityInput.addEventListener('input', calculateTotal);
+// ЗАПУСК ИНИЦИАЛИЗАЦИИ
+renderRadioButtons();
 });
